@@ -1,23 +1,28 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"gee"
 	"net/http"
 )
 
 func main() {
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/hello", helloHandler)
-	log.Fatal(http.ListenAndServe(":9999", nil))
-}
+	r := gee.New()
+	r.GET("/", func(c *gee.Context) {
+		c.HTML(http.StatusOK, "<h1>Hello Gee</h1>")
+	})
+	r.GET("/hello", func(c *gee.Context) {
+		c.String(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
+	})
 
-func indexHandler(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "URL.Path = %q\n", req.URL.Path)
-}
+	r.POST("/login", func(c *gee.Context) {
+		c.JSON(http.StatusOK, gee.Map{
+			"username": c.PostForm("username"),
+			"password": c.PostForm("password"),
+		})
+	})
 
-func helloHandler(w http.ResponseWriter, req *http.Request) {
-	for k, v := range req.Header {
-		fmt.Fprintf(w, "Header[%q] = %q\n", k, v)
+	err := r.Run(":9999")
+	if err != nil {
+		panic(err)
 	}
 }

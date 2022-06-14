@@ -1,4 +1,4 @@
-module Gee
+module main
 
 go 1.16
 
