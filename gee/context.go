@@ -17,6 +17,7 @@ type Context struct {
 	// request info
 	Path   string
 	Method string
+	Params map[string]string
 
 	// response info
 	StatusCode int
@@ -34,6 +35,14 @@ func newContext(w http.ResponseWriter, req *http.Request) *Context {
 func (c *Context) status(code int) {
 	c.StatusCode = code
 	c.Writer.WriteHeader(code)
+}
+
+// Param 获取URL参数
+func (c *Context) Param(key string) string {
+	if value, ok := c.Params[key]; ok {
+		return value
+	}
+	return ""
 }
 
 // PostForm 从Post和Put主体中获取value
