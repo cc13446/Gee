@@ -36,8 +36,7 @@ func secondForV2() gee.HandlerFunc {
 }
 
 func main() {
-	r := gee.New()
-	r.Use(gee.Logger())
+	r := gee.Default()
 	r.Static("/assets", "./static")
 	// 自定义映射函数
 	r.SetFuncMap(template.FuncMap{
@@ -55,6 +54,11 @@ func main() {
 				"title": "gee",
 				"now":   time.Now(),
 			})
+		})
+
+		r.GET("/panic", func(c *gee.Context) {
+			names := []string{"geektutu"}
+			c.String(http.StatusOK, names[100])
 		})
 	}
 
