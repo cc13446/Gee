@@ -1,8 +1,8 @@
 package gee
 
 import (
-	"log"
 	"net/http"
+	"strings"
 )
 
 // HandlerFunc defines the request handler used by gee
@@ -32,7 +32,17 @@ func (engine *Engine) Run(addr string) (err error) {
 }
 
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+
+	// 找到前缀相同的所有中间件
+	var middlewares []HandlerFunc
+	for _, group := range engine.groups {
+		if strings.HasPrefix(req.URL.Path, group.prefix) {
+			middlewares = append(middlewares, group.middlewares...)
+		}
+	}
+
 	c := newContext(w, req)
+	c.handlers = middlewares
 	engine.router.handle(c)
 }
 
@@ -40,7 +50,8 @@ func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 type RouterGroup struct {
 	// 前缀
 	prefix string
-	// 支持中间件
+	// 支持中间件，允许用户做一些业务之外的处理
+	// 递归调用
 	middlewares []HandlerFunc
 	// 支持分组控制嵌套
 	parent *RouterGroup
@@ -63,7 +74,6 @@ func (group *RouterGroup) Group(prefix string) *RouterGroup {
 
 func (group *RouterGroup) addRoute(method string, comp string, handler HandlerFunc) {
 	pattern := group.prefix + comp
-	log.Printf("Route %4s - %s", method, pattern)
 	group.engine.router.addRoute(method, pattern, handler)
 }
 
@@ -75,4 +85,9 @@ func (group *RouterGroup) GET(pattern string, handler HandlerFunc) {
 // POST defines the method to add POST request
 func (group *RouterGroup) POST(pattern string, handler HandlerFunc) {
 	group.addRoute("POST", pattern, handler)
+}
+
+// Use is defined to add middleware to the group
+func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
+	group.middlewares = append(group.middlewares, middlewares...)
 }

@@ -21,6 +21,10 @@ type Context struct {
 
 	// response info
 	StatusCode int
+
+	// middleware
+	handlers []HandlerFunc
+	index    int
 }
 
 func newContext(w http.ResponseWriter, req *http.Request) *Context {
@@ -29,6 +33,7 @@ func newContext(w http.ResponseWriter, req *http.Request) *Context {
 		Req:    req,
 		Path:   req.URL.Path,
 		Method: req.Method,
+		index:  -1,
 	}
 }
 
@@ -91,5 +96,23 @@ func (c *Context) HTML(code int, html string) {
 	_, err := c.Writer.Write([]byte(html))
 	if err != nil {
 		panic(err)
+	}
+}
+
+func (c *Context) Fail(code int, err string) {
+	c.index = len(c.handlers)
+	c.JSON(code, Map{"message": err})
+}
+
+// Next 依次调用中间件处理函数
+func (c *Context) Next() {
+	c.index++
+	s := len(c.handlers)
+	// 这里循环调用而不是简单调用下一个的原因是：
+	// 不是所有的 handler都会调用 Next()
+	// 手工调用 Next()，一般用于在请求前后各实现一些行为。
+	// 如果中间件只作用于请求前，中间件可以省略调用Next()
+	for ; c.index < s; c.index++ {
+		c.handlers[c.index](c)
 	}
 }

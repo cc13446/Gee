@@ -52,6 +52,10 @@ func (n *node) matchChildren(part string) []*node {
 func (n *node) insert(pattern string, parts []string) {
 	// 最后一个匹配的节点
 	if len(parts) == n.height {
+		// 如果路由冲突则 panic
+		if n.pattern != "" {
+			panic("has conflicting router " + pattern + " and " + n.pattern)
+		}
 		n.pattern = pattern
 		if len(parts) == 0 {
 			return
