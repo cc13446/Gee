@@ -34,7 +34,7 @@ func (engine *Engine) LoadHTMLGlob(pattern string) {
 // Default use Logger() & Recovery middlewares
 func Default() *Engine {
 	engine := New()
-	engine.Use(Logger(), Recovery())
+	engine.Use(Recovery(), Logger())
 	return engine
 }
 
