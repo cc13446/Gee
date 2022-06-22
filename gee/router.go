@@ -7,7 +7,9 @@ import (
 )
 
 type router struct {
-	roots    map[string]*node
+	// roots 前缀树根
+	roots map[string]*node
+	// handlers 处理函数哈希表
 	handlers map[string]HandlerFunc
 }
 
